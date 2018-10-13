@@ -4,8 +4,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>PrimitiveBase</PackageId>
-    <Version>0.2.0</Version>
-    <Authors />
+    <Version>0.3.0</Version>
+    <Authors>ionOT Ltd</Authors>
     <Company>ionOT Ltd</Company>
     <Product>PrimitiveBase</Product>
     <Description>General set of base classes implementing primitive concepts and useful utilities that are required for all but the basic of libraries and applications.</Description>
