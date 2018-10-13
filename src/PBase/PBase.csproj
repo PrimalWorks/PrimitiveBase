@@ -2,6 +2,26 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>PrimitiveBase</PackageId>
+    <Version>0.2.0</Version>
+    <Authors />
+    <Company>ionOT Ltd</Company>
+    <Product>PrimitiveBase</Product>
+    <Description>General set of base classes implementing primitive concepts and useful utilities that are required for all but the basic of libraries and applications.</Description>
+    <Copyright>Copyright  © 2018 ionOT Ltd</Copyright>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/ekwus/PrimitiveBase/master/LICENSE.md</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/ekwus/PrimitiveBase</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ekwus/PrimitiveBase</RepositoryUrl>
+    <PackageReleaseNotes>Early version of this base class library</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>../../build/Debug/PBase</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>../../build/Release/PBase</OutputPath>
   </PropertyGroup>
 
 </Project>
