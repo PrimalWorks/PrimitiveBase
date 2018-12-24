@@ -5,7 +5,7 @@ using Xunit;
 
 namespace PBase.Test
 {
-    public class CoreTests
+    public class SafeLockTests
     {
         [Fact]
         public void TestSafeLock()
