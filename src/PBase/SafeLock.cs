@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 
@@ -8,10 +9,15 @@ namespace PBase
     public class SafeLock
     {
 #if DEBUG
-        private static readonly TimeSpan sm_timeout = TimeSpan.FromMinutes(1.0);
+        private static TimeSpan sm_timeout = TimeSpan.FromMinutes(1.0);
 #else
-        private static readonly TimeSpan sm_timeout = TimeSpan.FromMinutes(10.0);
+        private static TimeSpan sm_timeout = TimeSpan.FromMinutes(10.0);
 #endif
+        public static TimeSpan Timeout
+        {
+            get { return sm_timeout; }
+            set { sm_timeout = value; }
+        }
 
         private struct SafeLockDisposer : IDisposable
         {
@@ -77,7 +83,7 @@ namespace PBase
         {
             if (m_thread != Thread.CurrentThread)
             {
-                throw new Exception("Only the locks thread can release it");
+                throw new SafeLockException("Only the locks thread can release it");
             }
 
             m_ref--;
@@ -88,6 +94,25 @@ namespace PBase
             }
 
             Monitor.Exit(m_synchronised);
+        }
+    }
+
+    public class SafeLockException : Exception
+    {
+        public SafeLockException()
+        {
+        }
+
+        public SafeLockException(string message) : base(message)
+        {
+        }
+
+        public SafeLockException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected SafeLockException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
         }
     }
 }
