@@ -8,11 +8,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7423D71E-1584-434F-8771-0EE676321E59}"
 	ProjectSection(SolutionItems) = preProject
 		..\.gitignore = ..\.gitignore
+		..\appveyor.yml = ..\appveyor.yml
 		..\LICENSE.md = ..\LICENSE.md
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PBase.Test", "PBase.Test\PBase.Test.csproj", "{5CA2A50E-0401-4ED9-8527-417538EC736A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PBase.Test", "PBase.Test\PBase.Test.csproj", "{5CA2A50E-0401-4ED9-8527-417538EC736A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
