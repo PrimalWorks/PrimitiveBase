@@ -99,19 +99,7 @@ namespace PBase
 
     public class SafeLockException : Exception
     {
-        public SafeLockException()
-        {
-        }
-
         public SafeLockException(string message) : base(message)
-        {
-        }
-
-        public SafeLockException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-
-        protected SafeLockException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
     }

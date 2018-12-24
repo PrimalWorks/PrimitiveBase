@@ -13,10 +13,14 @@ namespace PBase.Test
             var timeout = TimeSpan.FromSeconds(15.0);
             SafeLock.Timeout = timeout / 3;
 
+            Assert.Equal((timeout / 3), SafeLock.Timeout);
+
             var safeLock = new SafeLock();
 
             Assert.True(safeLock.TryEnter());
+            Assert.True(safeLock.TryEnter());
 
+            safeLock.Exit();
             safeLock.Exit();
 
             Task.Run(() =>
@@ -37,7 +41,10 @@ namespace PBase.Test
             {
                 using (safeLock.Enter())
                 {
-                    Thread.Sleep(timeout);
+                    using (safeLock.Enter())
+                    {
+                        Thread.Sleep(timeout);
+                    }
                 }
             });
 
