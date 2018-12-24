@@ -32,9 +32,9 @@ namespace PBase
             {
                 Dispose(true);
             }
-            catch(Exception ex)
+            catch (Exception)
             {
-
+                // Disposing so not much we can do with this exception
             }
             finally
             {
