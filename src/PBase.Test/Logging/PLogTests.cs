@@ -29,7 +29,7 @@ namespace PBase.Test.Logging
         }
 
         [Fact]
-        public void TestPLogCritical()
+        public void TestPLogLogging()
         {
             var testlevel = "Critical";
             var testex = new ArgumentException("ARGEX");
@@ -54,14 +54,10 @@ namespace PBase.Test.Logging
             TestLog.Clear();
             PLog.LogCritical(testevent, testex, "TEST4");
             TestLog.AssertLogMatch("PBase", testlevel, "TEST4", "[123]", "ARGEX");
-        }
 
-        [Fact]
-        public void TestPLogDebug()
-        {
-            var testlevel = "Debug";
-            var testex = new ArgumentException("ARGEX");
-            var testevent = new EventId(123);
+            testlevel = "Debug";
+            testex = new ArgumentException("ARGEX");
+            testevent = new EventId(123);
 
             TestLog.Clear();
             PLog.LogDebug("TEST1");
@@ -82,14 +78,10 @@ namespace PBase.Test.Logging
             TestLog.Clear();
             PLog.LogDebug(testevent, testex, "TEST4");
             TestLog.AssertLogMatch("PBase", testlevel, "TEST4", "[123]", "ARGEX");
-        }
 
-        [Fact]
-        public void TestPLogError()
-        {
-            var testlevel = "Error";
-            var testex = new ArgumentException("ARGEX");
-            var testevent = new EventId(123);
+            testlevel = "Error";
+            testex = new ArgumentException("ARGEX");
+            testevent = new EventId(123);
 
             TestLog.Clear();
             PLog.LogError("TEST1");
@@ -110,14 +102,10 @@ namespace PBase.Test.Logging
             TestLog.Clear();
             PLog.LogError(testevent, testex, "TEST4");
             TestLog.AssertLogMatch("PBase", testlevel, "TEST4", "[123]", "ARGEX");
-        }
 
-        [Fact]
-        public void TestPLogInformation()
-        {
-            var testlevel = "Information";
-            var testex = new ArgumentException("ARGEX");
-            var testevent = new EventId(123);
+            testlevel = "Information";
+            testex = new ArgumentException("ARGEX");
+            testevent = new EventId(123);
 
             TestLog.Clear();
             PLog.LogInformation("TEST1");
@@ -138,14 +126,10 @@ namespace PBase.Test.Logging
             TestLog.Clear();
             PLog.LogInformation(testevent, testex, "TEST4");
             TestLog.AssertLogMatch("PBase", testlevel, "TEST4", "[123]", "ARGEX");
-        }
 
-        [Fact]
-        public void TestPLogTrace()
-        {
-            var testlevel = "Trace";
-            var testex = new ArgumentException("ARGEX");
-            var testevent = new EventId(123);
+            testlevel = "Trace";
+            testex = new ArgumentException("ARGEX");
+            testevent = new EventId(123);
 
             TestLog.Clear();
             PLog.LogTrace("TEST1");
@@ -166,14 +150,10 @@ namespace PBase.Test.Logging
             TestLog.Clear();
             PLog.LogTrace(testevent, testex, "TEST4");
             TestLog.AssertLogMatch("PBase", testlevel, "TEST4", "[123]", "ARGEX");
-        }
 
-        [Fact]
-        public void TestPLogWarning()
-        {
-            var testlevel = "Warning";
-            var testex = new ArgumentException("ARGEX");
-            var testevent = new EventId(123);
+            testlevel = "Warning";
+            testex = new ArgumentException("ARGEX");
+            testevent = new EventId(123);
 
             TestLog.Clear();
             PLog.LogWarning("TEST1");
