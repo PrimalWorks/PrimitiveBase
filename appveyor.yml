@@ -7,7 +7,7 @@ before_build:
 build_script:
   - dotnet build PrimitiveBase.sln
 test_script:
-  - dotnet test /p:CollectCoverage=true /p:Include=[PBase]* /p:CoverletOutputFormat=opencover
+  - dotnet test /p:CollectCoverage=true /p:Include=[PBase]* /p:CoverletOutputFormat=opencover /p:CoverletOutput=../../
   - dir
 after_test:
   - dir
