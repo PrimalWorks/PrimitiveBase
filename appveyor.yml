@@ -14,13 +14,6 @@ test_script:
 after_test:
   - codecov -f "coverage.opencover.xml" -t $CODECOV
 
-deploy:
-  provider: nuget
-  api_key:
-    secure: shxGZasNtag0zVi38/DH2ToxfrUDNzZSFIevIKemuVKDfCzmNm//UCWG1Ysi0i+2
-  skip_symbols: false
-  artifact: /.*/Release/\.nupkg
-
 dotnet_csproj:
   patch: true
   file: '**\*.csproj'
