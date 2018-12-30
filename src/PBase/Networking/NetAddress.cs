@@ -1,6 +1,8 @@
-﻿using System;
+﻿using PBase.Logging;
+using System;
 using System.Linq;
 using System.Net;
+using Microsoft.Extensions.Logging;
 
 namespace PBase.Networking
 {
@@ -30,7 +32,8 @@ namespace PBase.Networking
             }
             else
             {
-                throw new ArgumentException("Address Format is Unknown", "addrAndOrPort");
+                PLog.LogError("Address Format is Unknown!");
+                throw new ArgumentException("Address Format is Unknown!", "addrAndOrPort");
             }
         }
 
