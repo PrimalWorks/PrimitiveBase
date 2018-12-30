@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>PrimitiveBase</PackageId>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <Authors>ionOT Ltd</Authors>
     <Company>ionOT Ltd</Company>
     <Product>PrimitiveBase</Product>
@@ -14,6 +14,10 @@
     <PackageProjectUrl>https://github.com/ekwus/PrimitiveBase</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ekwus/PrimitiveBase</RepositoryUrl>
     <PackageReleaseNotes>Early version of this base class library</PackageReleaseNotes>
+    <PackageVersion>0.4.0</PackageVersion>
+    <AssemblyVersion>0.4.0</AssemblyVersion>
+    <InformationalVersion>0.4.0</InformationalVersion>
+    <FileVersion>0.4.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
