@@ -10,14 +10,14 @@ General set of base classes implementing the primitive concepts and useful utili
 
 Currently a few Core base classes are implemented;
 
-* 'SafeLock'
-* 'BaseSyncronised'
-* 'BaseDisposable'
-* 'BaseNotifiable'
+* `SafeLock`
+* `BaseSyncronised`
+* `BaseDisposable`
+* `BaseNotifiable`
 
 A start to the Networking namespace has been made with;
 
-* 'NetAddress'
+* `NetAddress`
 
 Further Networking classes will be added once the unit testable wrappers have been created for `Socket` and `SocketAsyncEventArgs`
 
