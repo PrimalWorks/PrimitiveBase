@@ -14,6 +14,9 @@ test_script:
 after_test:
   - codecov -f "coverage.opencover.xml" -t $CODECOV
 
+artifacts:
+  - path: '**\*.nupkg'
+
 dotnet_csproj:
   patch: true
   file: '**\*.csproj'
