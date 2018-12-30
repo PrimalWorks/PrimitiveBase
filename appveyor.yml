@@ -7,8 +7,8 @@ before_build:
 build_script:
   - dotnet build PrimitiveBase.sln
 test_script:
-  - dotnet test /p:CollectCoverage=true /p:Include=[PBase]* /p:CoverletOutputFormat=opencover /p:CoverletOutput=build/coverage/
+  - dotnet test /p:CollectCoverage=true /p:Include=[PBase]* /p:CoverletOutputFormat=opencover
   - dir
 after_test:
   - dir
-  - codecov -f \build\coverage\coverage.opencover.xml -t $CODECOV
+  - codecov -f "coverage.opencover.xml" -t $CODECOV
