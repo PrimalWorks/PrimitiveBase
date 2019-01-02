@@ -176,6 +176,67 @@ namespace PBase.Test.Logging
             TestLog.AssertLogMatch("PBase", testlevel, "TEST4", "[123]", "ARGEX");
         }
 
+        public class PLogNullTest
+        {
+            [Fact]
+            public void TestWhenLoggerIsNUll()
+            {
+                var testex = new ArgumentException("ARGEX");
+                var testevent = new EventId(123);
+
+                PLog.LogCritical("TEST1");
+                PLog.LogCritical("TEST2 {0}", "PARAM2");
+                PLog.LogCritical(testex, "TEST3 {0}", "PARAM3");
+                PLog.LogCritical(testevent, "TEST4");
+                PLog.LogCritical(testevent, testex, "TEST4");
+
+                testex = new ArgumentException("ARGEX");
+                testevent = new EventId(123);
+
+                PLog.LogDebug("TEST1");
+                PLog.LogDebug("TEST2 {0}", "PARAM2");
+                PLog.LogDebug(testex, "TEST3 {0}", "PARAM3");
+                PLog.LogDebug(testevent, "TEST4");
+                PLog.LogDebug(testevent, testex, "TEST4");
+
+                testex = new ArgumentException("ARGEX");
+                testevent = new EventId(123);
+
+                PLog.LogError("TEST1");
+                PLog.LogError("TEST2 {0}", "PARAM2");
+                PLog.LogError(testex, "TEST3 {0}", "PARAM3");
+                PLog.LogError(testevent, "TEST4");
+                PLog.LogError(testevent, testex, "TEST4");
+
+                testex = new ArgumentException("ARGEX");
+                testevent = new EventId(123);
+
+                PLog.LogInformation("TEST1");
+                PLog.LogInformation("TEST2 {0}", "PARAM2");
+                PLog.LogInformation(testex, "TEST3 {0}", "PARAM3");
+                PLog.LogInformation(testevent, "TEST4");
+                PLog.LogInformation(testevent, testex, "TEST4");
+
+                testex = new ArgumentException("ARGEX");
+                testevent = new EventId(123);
+
+                PLog.LogTrace("TEST1");
+                PLog.LogTrace("TEST2 {0}", "PARAM2");
+                PLog.LogTrace(testex, "TEST3 {0}", "PARAM3");
+                PLog.LogTrace(testevent, "TEST4");
+                PLog.LogTrace(testevent, testex, "TEST4");
+
+                testex = new ArgumentException("ARGEX");
+                testevent = new EventId(123);
+
+                PLog.LogWarning("TEST1");
+                PLog.LogWarning("TEST2 {0}", "PARAM2");
+                PLog.LogWarning(testex, "TEST3 {0}", "PARAM3");
+                PLog.LogWarning(testevent, "TEST4");
+                PLog.LogWarning(testevent, testex, "TEST4");
+            }
+        }
+
         public class AssertLogger : ITestOutputHelper
         {
             private StringBuilder m_lines = new StringBuilder();
