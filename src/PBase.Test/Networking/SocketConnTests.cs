@@ -19,7 +19,7 @@ namespace PBase.Test.Networking
         {
         }
 
-        [Fact]
+        // Removing this test for now as it access the internet
         public void TestGETRequest()
         {
             int received = 0;
