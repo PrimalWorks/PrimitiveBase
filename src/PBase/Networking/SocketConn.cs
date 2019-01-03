@@ -24,6 +24,10 @@ namespace PBase.Networking
 
         protected override void Dispose(bool disposing)
         {
+            if (m_isConnected)
+            {
+                m_socket.Disconnect(false);
+            }
             m_isConnected = false;
             m_isConnecting = false;
             m_socket.Dispose();
@@ -46,7 +50,7 @@ namespace PBase.Networking
             try
             {
                 m_receiveCallback = receiveCallback;
-                ISocketAsyncEventArgs args = m_factory.AllocateArgs();
+                ISocketAsyncEventArgs args = m_factory.GetEmptyArgs();
                 args.UserToken = src;
                 args.RemoteEndPoint = m_remote;
                 args.Completed += OnConnectCompleted;
@@ -72,8 +76,6 @@ namespace PBase.Networking
             var result = e.SocketError;
             try
             {
-                m_factory.FreeArgs(e);
-
                 if (src == null)
                 {
                     PLog.LogError("SockConn requires UserToken to be of type TaskCompletionSource<bool>");

@@ -26,5 +26,10 @@ namespace PBase.Networking
         {
             return base.SendAsync((SocketAsyncEventArgs)args);
         }
+
+        public void Disconnect(bool reuseSocket)
+        {
+            base.Disconnect(reuseSocket);
+        }
     }
 }

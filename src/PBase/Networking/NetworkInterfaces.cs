@@ -22,6 +22,7 @@ namespace PBase.Networking
         bool ConnectAsync(ISocketAsyncEventArgs args);
         bool ReceiveAsync(ISocketAsyncEventArgs args);
         bool SendAsync(ISocketAsyncEventArgs args);
+        void Disconnect(bool reuseSocket);
     }
 
     public interface ISocketAsyncEventArgsFactory
