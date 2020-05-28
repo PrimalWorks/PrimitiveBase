@@ -43,9 +43,9 @@ namespace PBase
             m_synchronised = new object();
         }
 
-        public bool TryEnter()
+        public bool TryEnter(int timeoutMilliseconds)
         {
-            if (Monitor.TryEnter(m_synchronised, sm_timeout))
+            if (Monitor.TryEnter(m_synchronised, timeoutMilliseconds))
             {
                 if (m_thread == null)
                 {
@@ -58,9 +58,10 @@ namespace PBase
                 }
                 else
                 {
+                    Monitor.Exit(m_synchronised);
                     throw new Exception("SafeLock held by another Thread");
                 }
-                
+
                 return true;
             }
             else
@@ -69,15 +70,32 @@ namespace PBase
             }
         }
 
-        public IDisposable Enter()
+        public bool TryEnter()
         {
-            if (!TryEnter())
+            return TryEnter(sm_timeout.Milliseconds);
+        }
+
+        public IDisposable Enter(int timeoutMilliseconds)
+        {
+            if (!TryEnter(timeoutMilliseconds))
             {
                 throw new TimeoutException("Timed out waiting for lock");
             }
 
             return new SafeLockDisposer(this);
         }
+
+        public IDisposable Enter()
+        {
+            return Enter(sm_timeout.Milliseconds);
+        }
+
+        /*public bool Wait(int timeoutMilliseconds = -1)
+        {
+
+
+            //return Monitor.Wait(m_synchronised, timeoutMilliseconds);
+        }*/
 
         public void Exit()
         {
