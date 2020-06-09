@@ -1,92 +1,104 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Threading;
 using PBase.Utility;
 using Xunit;
 
 namespace PBase.Test.Utility
 {
-    public class ObservableDictionaryTests
+    public class ObservableConcurrentDictionaryTests
     {
-       [Fact]
-        public void TestObservableDictionaryAdd()
+        [Fact]
+        public void TestObservableConcurrentDictionaryAdd()
         {
-            ObservableDictionary<string, string> observableDictionary;
-            observableDictionary = new ObservableDictionary<string, string> {{"First", "The first value"}, {"Second", "The second value"}};
+            var latch = new CountdownEvent(4);
 
-            var collectionChanged = 0;
-            var propertyChanged = 0;
+            var collectionChangedActions = new List<NotifyCollectionChangedAction>();
+            var propertiesChanged = new List<string>();
 
-            observableDictionary.CollectionChanged += (sender, args) =>
+            NotifyCollectionChangedEventHandler collectionChangedHandler = (sender, args) =>
             {
-                collectionChanged++;
+                collectionChangedActions.Add(args.Action);
+                latch.Signal();
             };
 
-            observableDictionary.PropertyChanged += (sender, args) =>
+            PropertyChangedEventHandler propertyChangedHandler = (sender, args) =>
             {
-                propertyChanged++;
+                propertiesChanged.Add(args.PropertyName);
+                latch.Signal();
             };
 
-            observableDictionary.Add("Third", "A third value");
+            var observableDictionary =
+                new ObservableConcurrentDictionary<string, string>(collectionChangedHandler, propertyChangedHandler);
 
-            Thread.Sleep(5000);
+            observableDictionary.Add("1", "value");
 
-            Assert.Equal(1, collectionChanged);
-            Assert.Equal(3, propertyChanged);
+            latch.Wait();
+
+            Assert.Equal(1, collectionChangedActions.Count);
+            Assert.Equal(NotifyCollectionChangedAction.Add, collectionChangedActions[0]);
+
+            Assert.Equal(3, propertiesChanged.Count);
+            Assert.True(propertiesChanged.Contains("Count"));
+            Assert.True(propertiesChanged.Contains("Keys"));
+            Assert.True(propertiesChanged.Contains("Values"));
+
+            latch.Dispose();
         }
 
         [Fact]
-        public void TestObservableDictionaryRemove()
+        public void TestObservableConcurrentDictionaryTryAdd()
         {
-            ObservableDictionary<string, string> observableDictionary;
-            observableDictionary = new ObservableDictionary<string, string> {{"First", "The first value"}, {"Second", "The second value"}};
+            var latch = new CountdownEvent(4);
 
-            var collectionChanged = 0;
-            var propertyChanged = 0;
+            var collectionChangedActions = new List<NotifyCollectionChangedAction>();
+            var propertiesChanged = new List<string>();
 
-            observableDictionary.CollectionChanged += (sender, args) =>
+            NotifyCollectionChangedEventHandler collectionChangedHandler = (sender, args) =>
             {
-                collectionChanged++;
+                collectionChangedActions.Add(args.Action);
+                latch.Signal();
             };
 
-            observableDictionary.PropertyChanged += (sender, args) =>
+            PropertyChangedEventHandler propertyChangedHandler = (sender, args) =>
             {
-                propertyChanged++;
+                propertiesChanged.Add(args.PropertyName);
+                latch.Signal();
             };
 
-            observableDictionary.Remove("First");
+            var observableDictionary =
+                new ObservableConcurrentDictionary<string, string>(collectionChangedHandler, propertyChangedHandler);
 
-            Thread.Sleep(5000);
+            var success = observableDictionary.TryAdd("1", "value");
 
-            Assert.Equal(1, collectionChanged);
-            Assert.Equal(3, propertyChanged);
+            latch.Wait();
+
+            Assert.True(success);
+
+            Assert.Equal(1, collectionChangedActions.Count);
+            Assert.Equal(NotifyCollectionChangedAction.Add, collectionChangedActions[0]);
+
+            Assert.Equal(3, propertiesChanged.Count);
+            Assert.True(propertiesChanged.Contains("Count"));
+            Assert.True(propertiesChanged.Contains("Keys"));
+            Assert.True(propertiesChanged.Contains("Values"));
+
+            latch.Dispose();
         }
 
         [Fact]
-        public void TestObservableDictionaryUpdate()
+        public void TestObservableConcurrentDictionaryAddWithNullKey()
         {
-            ObservableDictionary<string, string> observableDictionary;
-            observableDictionary = new ObservableDictionary<string, string> {{"First", "The first value"}, {"Second", "The second value"}};
+            var observableDictionary = new ObservableConcurrentDictionary<string, string>();
+            Assert.Throws<System.ArgumentNullException>(() => observableDictionary.Add(null, "value"));
+        }
 
-            var collectionChanged = 0;
-            var propertyChanged = 0;
-
-            observableDictionary.CollectionChanged += (sender, args) =>
-            {
-                collectionChanged++;
-            };
-
-            observableDictionary.PropertyChanged += (sender, args) =>
-            {
-                propertyChanged++;
-            };
-
-            observableDictionary["Second"] = "A new second value";
-
-            Thread.Sleep(5000);
-
-
-            Assert.Equal(1, collectionChanged);
-            Assert.Equal(0, propertyChanged);
+        [Fact]
+        public void TestObservableConcurrentDictionaryTryAddWithNullKey()
+        {
+            var observableDictionary = new ObservableConcurrentDictionary<string, string>();
+            Assert.Throws<System.ArgumentNullException>(() => observableDictionary.TryAdd(null, "value"));
         }
     }
 }
