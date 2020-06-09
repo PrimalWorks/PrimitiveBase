@@ -90,13 +90,6 @@ namespace PBase
             return Enter(sm_timeout.Milliseconds);
         }
 
-        /*public bool Wait(int timeoutMilliseconds = -1)
-        {
-
-
-            //return Monitor.Wait(m_synchronised, timeoutMilliseconds);
-        }*/
-
         public void Exit()
         {
             if (m_thread != Thread.CurrentThread)

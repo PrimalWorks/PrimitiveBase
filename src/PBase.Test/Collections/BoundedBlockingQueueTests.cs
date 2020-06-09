@@ -1,6 +1,7 @@
 ﻿using PBase.Collections;
 using PBase.Test.Support;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -34,7 +35,7 @@ namespace PBase.Test.Collections
         }
 
         [Fact]
-        async void TestBoundedBlockingQueueEnqueue()
+        async void TestBoundedBlockingQueueEnqueueDequeue()
         {
             BoundedBlockingQueue<TestQueueItem> bbq = new BoundedBlockingQueue<TestQueueItem>(2);
             bbq.Enqueue(new TestQueueItem { Value = 100 });
@@ -62,15 +63,15 @@ namespace PBase.Test.Collections
             bbq.Enqueue(new TestQueueItem { Value = 400 });
 
             Task.Run(() =>
-               {
-                   bbq.Enqueue(new TestQueueItem { Value = 600 });
-               });
+            {
+                bbq.Enqueue(new TestQueueItem { Value = 600 });
+            });
 
-            await Task.Delay(5000);
+            await Task.Delay(1000); //allow enough time for task to set up
 
             var item500 = bbq.Dequeue();
 
-            await Task.Delay(1000);
+            await Task.Delay(1000); //allow enough time for task to enqueue 600
 
             Assert.Equal(500, item500.Value);
             Assert.Equal(2, bbq.Count); //400 and 600 should be in here
@@ -78,22 +79,152 @@ namespace PBase.Test.Collections
             var item400 = bbq.Dequeue();
             Assert.Equal(1, bbq.Count);
             Assert.Equal(400, item400.Value);
-            
+
             var item600 = bbq.Dequeue();
             Assert.Equal(0, bbq.Count);
             Assert.Equal(600, item600.Value);
-            
+        }
 
+        [Fact]
+        async void TestBoundedBlockingQueueClearDispose()
+        {
+            BoundedBlockingQueue<TestQueueItem> bbq = new BoundedBlockingQueue<TestQueueItem>(3);
 
+            bbq.TryEnqueue(new TestQueueItem { Value = 100 });
+            bbq.Enqueue(new TestQueueItem { Value = 200 });
+
+            Assert.Equal(2, bbq.Count);
+
+            bbq.Enqueue(new TestQueueItem { Value = 300 });
+
+            bool succEnq = false;
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(1000); //have to wait as new item will be enqueued immediately after clearing
+                succEnq = bbq.Enqueue(new TestQueueItem { Value = 400 });
+            });
+
+            bbq.Clear();
+
+            var result = bbq.TryDequeue(out var qItem);
+            Assert.False(result);
+            Assert.Null(qItem);
+
+            await Task.Delay(1000);
+            Assert.True(succEnq);
+            Assert.Equal(1, bbq.Count);
+            var item400 = bbq.Dequeue();
+            Assert.Equal(400, item400.Value);
+
+            bbq.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                var count = bbq.Count;
+            });
+
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                var size = bbq.Size;
+            });
+
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                var res = bbq.Enqueue(new TestQueueItem { Value = 1000 });
+            });
+        }
+
+        [Fact]
+        void TestBoundedBlockingQueueAddRemove()
+        {
+            BoundedBlockingQueue<TestQueueItem> bbq = new BoundedBlockingQueue<TestQueueItem>(1);
+
+            Assert.Equal(0, bbq.Count);
+
+            Assert.Throws<InvalidOperationException>(() => bbq.Add(new TestQueueItem { Value = 100 }));
+
+            Assert.Equal(0, bbq.Count);
+
+            Assert.Throws<InvalidOperationException>(() => bbq.Remove(new TestQueueItem { Value = 100 }));
+
+            Assert.Equal(0, bbq.Count);
+        }
+        
+        [Fact]
+        async void TestBoundedBlockingQueueClearMultipleWaitingThreads()
+        {
+            BoundedBlockingQueue<TestQueueItem> bbq = new BoundedBlockingQueue<TestQueueItem>(3);
+
+            var item100 = new TestQueueItem { Value = 100 };
+            var item200 = new TestQueueItem { Value = 200 };
+            var item300 = new TestQueueItem { Value = 300 };
+            var item400 = new TestQueueItem { Value = 400 };
+            var item500 = new TestQueueItem { Value = 500 };
+            var item600 = new TestQueueItem { Value = 600 };
+
+            bbq.Enqueue(item100);
+            bbq.Enqueue(item200);
+            bbq.Enqueue(item300);
+
+            Assert.Equal(3, bbq.Count);
+
+            var values = bbq.Values;
+
+            Assert.Equal(3, values.Length);
+            Assert.Contains(item100, values);
+            Assert.Contains(item200, values);
+            Assert.Contains(item300, values);
+
+            Task.Run(() =>
+            {
+                bbq.Enqueue(item400);
+            });
+
+            Task.Run(() =>
+            {
+                bbq.Enqueue(item500);
+            });
+
+            Task.Run(() =>
+            {
+                bbq.Enqueue(item600);
+            });
+
+            await Task.Delay(1000);
+
+            bbq.Clear();
+
+            await Task.Delay(1000);
+
+            values = bbq.Values;
+
+            Assert.Equal(3, values.Length);
+            Assert.Contains(item400, values);
+            Assert.Contains(item500, values);
+            Assert.Contains(item600, values);
+        }
+
+        [Fact]
+        void TestBoundedBlockingQueuePeek()
+        {
+            BoundedBlockingQueue<TestQueueItem> bbq = new BoundedBlockingQueue<TestQueueItem>(1);
+
+            bool peekEmpty = bbq.TryPeek(out var testQueueItem);
+
+            Assert.False(peekEmpty);
+            Assert.Null(testQueueItem);
+
+            bbq.Enqueue(new TestQueueItem { Value = 100 });
+
+            Assert.Equal(1, bbq.Count);
+
+            var item100Peek = bbq.Peek();
+            Assert.Equal(1, bbq.Count);
+            Assert.Equal(100, item100Peek.Value);
         }
 
 #pragma warning restore xUnit2013 // Do not use equality check to check for collection size.
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-
-        [Fact]
-        void TestingGround()
-        {
-
-        }
     }
 }
