@@ -1,7 +1,6 @@
 ﻿using PBase.Collections;
 using PBase.Test.Support;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -150,7 +149,7 @@ namespace PBase.Test.Collections
 
             Assert.Equal(0, bbq.Count);
         }
-        
+
         [Fact]
         async void TestBoundedBlockingQueueClearMultipleWaitingThreads()
         {
@@ -176,22 +175,47 @@ namespace PBase.Test.Collections
             Assert.Contains(item200, values);
             Assert.Contains(item300, values);
 
+            bool exceptionThrown = false;
+
             Task.Run(() =>
             {
-                bbq.Enqueue(item400);
+                try
+                {
+                    bbq.Enqueue(item400);
+                }
+                catch
+                {
+                    exceptionThrown = true;
+                }
             });
 
             Task.Run(() =>
             {
-                bbq.Enqueue(item500);
+                try
+                {
+                    bbq.Enqueue(item500);
+                }
+                catch
+                {
+                    exceptionThrown = true;
+                }
             });
 
             Task.Run(() =>
             {
-                bbq.Enqueue(item600);
+                try
+                {
+                    bbq.Enqueue(item600);
+                }
+                catch
+                {
+                    exceptionThrown = true;
+                }
             });
 
             await Task.Delay(1000);
+
+            Assert.False(exceptionThrown);
 
             bbq.Clear();
 
@@ -206,7 +230,7 @@ namespace PBase.Test.Collections
         }
 
         [Fact]
-        void TestBoundedBlockingQueuePeek()
+        async void TestBoundedBlockingQueuePeek()
         {
             BoundedBlockingQueue<TestQueueItem> bbq = new BoundedBlockingQueue<TestQueueItem>(1);
 
@@ -222,6 +246,36 @@ namespace PBase.Test.Collections
             var item100Peek = bbq.Peek();
             Assert.Equal(1, bbq.Count);
             Assert.Equal(100, item100Peek.Value);
+
+            var item100 = bbq.Dequeue();
+            Assert.Equal(0, bbq.Count);
+            Assert.Equal(100, item100.Value);
+
+            bool exceptionThrown = false;
+            TestQueueItem item200 = null;
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    item200 = bbq.Peek(5000, true);
+                }
+                catch
+                {
+                    exceptionThrown = true;
+                }
+            });
+
+            await Task.Delay(1000);
+
+            bbq.Enqueue(new TestQueueItem { Value = 200 });
+
+            await Task.Delay(1000);
+
+            Assert.Equal(1, bbq.Count);
+            Assert.Equal(200, item200.Value);
+
+            Assert.False(exceptionThrown);
         }
 
 #pragma warning restore xUnit2013 // Do not use equality check to check for collection size.

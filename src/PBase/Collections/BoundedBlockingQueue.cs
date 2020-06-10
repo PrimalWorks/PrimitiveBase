@@ -2,21 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace PBase.Collections
 {
     public sealed class BoundedBlockingQueue<T> : BaseDisposable, ICollection<T> where T : class
     {
-        #region Private Fields
-        private readonly int m_size;
-        private T[] m_items;
-        private int m_count;
-        private int m_head;
-        private int m_tail;
-        private AutoResetEvent m_resetEvent;
-        #endregion
-
         //TODO
         //source code documentation w/ author
         //
@@ -25,6 +15,14 @@ namespace PBase.Collections
         //but not for an available space in the queue
         //could add task cancellation tokens for overloads
         //complete adding method? to disallow future additions
+
+        #region Private Fields
+        private readonly int m_size;
+        private T[] m_items;
+        private int m_count;
+        private int m_head;
+        private int m_tail;
+        #endregion
 
         #region Public Properties
         public int Count
@@ -122,7 +120,6 @@ namespace PBase.Collections
             m_count = 0;
             m_head = 0;
             m_tail = 0;
-            m_resetEvent = new AutoResetEvent(false);
         }
         #endregion
 
@@ -140,37 +137,25 @@ namespace PBase.Collections
                 throw new ObjectDisposedException(nameof(BoundedBlockingQueue<T>));
             }
 
-            //This needs to be outside the safe lock as an enqueue thread
-            //will get stuck waiting for a dequeue which is waiting for this enqueue
-            //SafeLock doesn't have a Wait method
-            if (m_count == m_size)
+            using (IWaitable syncLock = SyncRoot.Enter(timeoutMilliseconds) as IWaitable)
             {
-                //Theoretically possible for an enqueue to set immediately
-                //after resetting here, meaning below would fall through to
-                //enqueueing even if the queue is full which will
-                //overwrite the head
-                //Could change to while loop though timeout may not be
-                //adhered to as strictly as expected though that might not
-                //be a priority - though even then still possible for
-                //an item to be enqueued before exiting the while loop
-
-                //Clear event signal to wait for a signal from a dequeue
-                //Could use separate dequeue and enqueue reset events
-                m_resetEvent.Reset();
-                
-                //Wait for a set from a dequeue
-                if (!m_resetEvent.WaitOne(timeoutMilliseconds))
+                //While the queue is full, wait for an empty space
+                //Timeout won't be exact if multiple enqueues are blocked on a full queue
+                //So a dequeue could be followed by a different enqueue so this will wait
+                //for another loop
+                while (m_count == m_size)
                 {
-                    throw new TimeoutException("Enqueue timed out while waiting for available queue space");
-                }
-            }
+                    //Wait for a pulse from a dequeue
+                    if (!syncLock.Wait(timeoutMilliseconds))
+                    {
+                        throw new TimeoutException("Enqueue timed out while waiting for available queue space");
+                    }
 
-            using (SyncRoot.Enter(timeoutMilliseconds))
-            {
-                //Double check not disposed since waiting for available space
-                if (IsDisposing || IsDisposed)
-                {
-                    throw new ObjectDisposedException(nameof(BoundedBlockingQueue<T>));
+                    //Double check not disposed since waiting for available space
+                    if (IsDisposing || IsDisposed)
+                    {
+                        throw new ObjectDisposedException(nameof(BoundedBlockingQueue<T>));
+                    }
                 }
 
                 m_items[m_tail++] = item;
@@ -179,7 +164,7 @@ namespace PBase.Collections
 
                 //Signal that an item has been enqueued to unblock waiting
                 //dequeue threads
-                m_resetEvent.Set();
+                syncLock.PulseAll();
 
                 return true;
             }
@@ -195,7 +180,7 @@ namespace PBase.Collections
         public bool TryEnqueue(T item, int timeoutMilliseconds = 0)
         {
             //The method only throws exception on thread lock timeout
-            using (SyncRoot.Enter(timeoutMilliseconds))
+            using (IWaitable syncLock = SyncRoot.Enter(timeoutMilliseconds) as IWaitable)
             {
                 if (item == null)
                 {
@@ -218,7 +203,7 @@ namespace PBase.Collections
 
                 //Signal that an item has been enqueued to unblock waiting
                 //dequeue threads
-                m_resetEvent.Set();
+                syncLock.PulseAll();
 
                 return true;
             }
@@ -226,19 +211,39 @@ namespace PBase.Collections
         #endregion
 
         #region Peek Methods
-        public T Peek(int timeoutMilliseconds = -1)
+        public T Peek(int timeoutMilliseconds = -1, bool waitForEnqueue = false)
         {
-            using (SyncRoot.Enter(timeoutMilliseconds))
+            using (IWaitable syncLock = SyncRoot.Enter(timeoutMilliseconds) as IWaitable)
             {
                 if (IsDisposing || IsDisposed)
                 {
                     throw new ObjectDisposedException(nameof(BoundedBlockingQueue<T>));
                 }
-
-                //Could wait for an enqueue here
+                
                 if (m_count == 0)
                 {
-                    throw new InvalidOperationException("Bounded Blocking Queue is empty");
+                    if (waitForEnqueue)
+                    {
+                        //While queue is empty, wait for an item to enqueue
+                        while (m_count == 0)
+                        {
+                            //Wait for a signal from an enqueue
+                            if (!syncLock.Wait(timeoutMilliseconds))
+                            {
+                                throw new TimeoutException("Dequeue timed out while waiting for queue item to dequeue");
+                            }
+
+                            //Double check not disposed since waiting for item to be enqueued
+                            if (IsDisposing || IsDisposed)
+                            {
+                                throw new ObjectDisposedException(nameof(BoundedBlockingQueue<T>));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Bounded Blocking Queue is empty");
+                    }
                 }
 
                 T value = m_items[m_head];
@@ -277,26 +282,23 @@ namespace PBase.Collections
                 throw new ObjectDisposedException(nameof(BoundedBlockingQueue<T>));
             }
 
-            //Similar reasoning for here from Enqueue method
-            if (m_count == 0)
+            using (IWaitable syncLock = SyncRoot.Enter(timeoutMilliseconds) as IWaitable)
             {
-                //Clear event signal to wait for a signal from a dequeue
-                //Could use separate dequeue and enqueue reset events
-                m_resetEvent.Reset();
-
-                //Wait for a set from an enqueue
-                if (!m_resetEvent.WaitOne(timeoutMilliseconds))
+                //Similar reasoning for here from Enqueue method
+                //While queue is empty, wait for an item to enqueue
+                while (m_count == 0)
                 {
-                    throw new TimeoutException("Dequeue timed out while waiting for queue item to dequeue");
-                }
-            }
+                    //Wait for a signal from an enqueue
+                    if (!syncLock.Wait(timeoutMilliseconds))
+                    {
+                        throw new TimeoutException("Dequeue timed out while waiting for queue item to dequeue");
+                    }
 
-            using (SyncRoot.Enter(timeoutMilliseconds))
-            {
-                //Double check not disposed since waiting for item to be enqueued
-                if (IsDisposing || IsDisposed)
-                {
-                    throw new ObjectDisposedException(nameof(BoundedBlockingQueue<T>));
+                    //Double check not disposed since waiting for item to be enqueued
+                    if (IsDisposing || IsDisposed)
+                    {
+                        throw new ObjectDisposedException(nameof(BoundedBlockingQueue<T>));
+                    }
                 }
 
                 T value = m_items[m_head];
@@ -306,7 +308,7 @@ namespace PBase.Collections
 
                 //Signal that an item has been dequeued to unblock waiting
                 //enqueue threads
-                m_resetEvent.Set();
+                syncLock.PulseAll();
 
                 return value;
             }
@@ -315,7 +317,7 @@ namespace PBase.Collections
         public bool TryDequeue(out T item, int timeoutMilliseconds = 0)
         {
             //This method only throws exception on thread lock timeout
-            using (SyncRoot.Enter(timeoutMilliseconds))
+            using (IWaitable syncRoot = SyncRoot.Enter(timeoutMilliseconds) as IWaitable)
             {
                 if (IsDisposing || IsDisposed)
                 {
@@ -336,7 +338,7 @@ namespace PBase.Collections
 
                 //Signal that an item has been dequeued to unblock waiting
                 //enqueue threads
-                m_resetEvent.Set();
+                syncRoot.PulseAll();
 
                 return true;
             }
@@ -366,10 +368,10 @@ namespace PBase.Collections
 
         public void Clear()
         {
-            using (SyncRoot.Enter())
+            using (IWaitable syncLock = SyncRoot.Enter() as IWaitable)
             {
                 //Unblock waiting threads
-                PulseWaitingThreads();
+                syncLock.PulseAll();
 
                 m_count = 0;
                 m_head = 0;
@@ -386,24 +388,9 @@ namespace PBase.Collections
             {
                 Clear();
 
-                m_resetEvent.Close();
-
                 m_items = null;
             }
         }
-        #endregion
-
-        #region Misc Methods
-
-        private void PulseWaitingThreads()
-        {
-            //This only needs to be called once as each successive enqueue
-            //will set the event for the next waiting thread
-            //though these enqueues will be invalid
-            //hence why this should only be called when clearing or disposing
-            m_resetEvent.Set();
-        }
-
         #endregion
 
         #region Enumerator Getters

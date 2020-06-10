@@ -37,20 +37,54 @@ namespace PBase.Test
 
             Assert.Throws<TimeoutException>(()=> safeLock.Enter());
 
+            bool threwException = false;
+
             Task.Run(() =>
             {
-                using (safeLock.Enter())
+                try
                 {
                     using (safeLock.Enter())
                     {
-                        Thread.Sleep(timeout);
+                        using (safeLock.Enter())
+                        {
+                            Thread.Sleep(timeout);
+                        }
                     }
+                }
+                catch
+                {
+                    threwException = true;
                 }
             });
 
+            Thread.Sleep(timeout);
+
+            Assert.False(threwException);
+
+            Assert.ThrowsAny<Exception>(() => safeLock.Exit());
+
+            bool pulsed = false;
+
+            Task.Run(() =>
+            {
+                using (IWaitable sync = safeLock.Enter() as IWaitable)
+                {
+                    sync.Wait((int)timeout.TotalMilliseconds);
+
+                    pulsed = true;
+                }
+            });
+
+            Thread.Sleep(timeout / 3);
+
+            using (IWaitable sync = safeLock.Enter() as IWaitable)
+            {
+                sync.PulseAll();
+            }
+
             Thread.Sleep(1000);
 
-            Assert.Throws<SafeLockException>(() => safeLock.Exit());
+            Assert.True(pulsed);
         }
     }
 }

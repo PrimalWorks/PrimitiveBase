@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 
 namespace PBase
@@ -19,7 +16,7 @@ namespace PBase
             set { sm_timeout = value; }
         }
 
-        private struct SafeLockDisposer : IDisposable
+        private struct SafeLockDisposer : IWaitable
         {
             private SafeLock m_owner;
 
@@ -32,11 +29,24 @@ namespace PBase
             {
                 m_owner.Exit();
             }
+            
+            public bool Wait()
+            {
+                return m_owner.Wait((int)sm_timeout.TotalMilliseconds);
+            }
+
+            public bool Wait(int timeoutMilliseconds)
+            {
+                return m_owner.Wait(timeoutMilliseconds);
+            }
+
+            public void PulseAll()
+            {
+                m_owner.PulseAll();
+            }
         }
 
         private object m_synchronised = null;
-        private Thread m_thread = null;
-        private int m_ref = 0;
 
         public SafeLock()
         {
@@ -47,21 +57,6 @@ namespace PBase
         {
             if (Monitor.TryEnter(m_synchronised, timeoutMilliseconds))
             {
-                if (m_thread == null)
-                {
-                    m_thread = Thread.CurrentThread;
-                    m_ref = 1;
-                }
-                else if (m_thread == Thread.CurrentThread)
-                {
-                    m_ref++;
-                }
-                else
-                {
-                    Monitor.Exit(m_synchronised);
-                    throw new Exception("SafeLock held by another Thread");
-                }
-
                 return true;
             }
             else
@@ -72,7 +67,7 @@ namespace PBase
 
         public bool TryEnter()
         {
-            return TryEnter(sm_timeout.Milliseconds);
+            return TryEnter((int)sm_timeout.TotalMilliseconds);
         }
 
         public IDisposable Enter(int timeoutMilliseconds)
@@ -87,31 +82,35 @@ namespace PBase
 
         public IDisposable Enter()
         {
-            return Enter(sm_timeout.Milliseconds);
+            return Enter((int)sm_timeout.TotalMilliseconds);
+        }
+        
+        private bool Wait(int timeoutMilliseconds)
+        {
+            if (Monitor.Wait(m_synchronised, timeoutMilliseconds))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private void PulseAll()
+        {
+            Monitor.PulseAll(m_synchronised);
         }
 
         public void Exit()
         {
-            if (m_thread != Thread.CurrentThread)
-            {
-                throw new SafeLockException("Only the locks thread can release it");
-            }
-
-            m_ref--;
-
-            if (m_ref == 0)
-            {
-                m_thread = null;
-            }
-
             Monitor.Exit(m_synchronised);
         }
     }
-
-    public class SafeLockException : Exception
+    
+    public interface IWaitable : IDisposable
     {
-        public SafeLockException(string message) : base(message)
-        {
-        }
+        bool Wait(int timeoutMilliseconds);
+        void PulseAll();
     }
 }
