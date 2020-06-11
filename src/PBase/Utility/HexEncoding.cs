@@ -7,11 +7,9 @@ namespace PBase.Utility
     {
         /// <summary>Converts a text string into a hex encoded format.</summary>
         /// <param name="stringToHex">The string to be hex encoded.</param>
-        /// <param name="removeDashes">Remove dashes from the hex encoded string</param>
-        /// <param name="toLowercase">Set the characters of the hex encoded string to lower case</param>
         /// <returns>The hex encoded string.</returns>
         /// <exception cref="FormatException"> Thrown when a null or empty stringToHex is provided</exception>
-        public static string ToHex(this string stringToHex, bool removeDashes = true, bool toLowercase = true)
+        public static string ToHex(this string stringToHex)
         {
             if (string.IsNullOrEmpty(stringToHex))
             {
@@ -20,16 +18,6 @@ namespace PBase.Utility
 
             var bytes = Encoding.Default.GetBytes(stringToHex);
             var hexString = BitConverter.ToString(bytes);
-
-            if(removeDashes)
-            {
-                hexString = hexString.Replace("-", "");
-            }
-
-            if (toLowercase)
-            {
-                hexString = hexString.ToLower();
-            }
 
             return hexString;
         }
