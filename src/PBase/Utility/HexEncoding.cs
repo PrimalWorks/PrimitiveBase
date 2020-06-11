@@ -13,7 +13,7 @@ namespace PBase.Utility
         {
             if (string.IsNullOrEmpty(stringToHex))
             {
-                throw new System.FormatException("String to hex cannot be null or empty");
+                throw new System.ArgumentException("String to hex cannot be null or empty");
             }
 
             var bytes = Encoding.Default.GetBytes(stringToHex);
@@ -30,14 +30,14 @@ namespace PBase.Utility
         {
             if (string.IsNullOrEmpty(hexString))
             {
-                throw new System.FormatException("Hex string cannot be null or empty");
+                throw new System.ArgumentException("Hex string cannot be null or empty");
             }
 
             hexString = hexString.Replace("-", "");
 
             if (hexString.Length % 2 != 0)
             {
-                throw new System.FormatException("Hex string length cannot be an odd number");
+                throw new System.ArgumentException("Hex string length cannot be an odd number");
             }
 
             var bytes = new byte[hexString.Length / 2];
