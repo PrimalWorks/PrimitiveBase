@@ -85,6 +85,9 @@ namespace PBase
             return Enter((int)sm_timeout.TotalMilliseconds);
         }
         
+        //Wait and PulseAll methods are private
+        //so only called from SafeLockDisposer class created when entering lock
+        //This ensures these methods are properly used inside a lock
         private bool Wait(int timeoutMilliseconds)
         {
             if (Monitor.Wait(m_synchronised, timeoutMilliseconds))
