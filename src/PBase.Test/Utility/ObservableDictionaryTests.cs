@@ -357,6 +357,63 @@ namespace PBase.Test.Utility
         }
 
         [Fact]
+        public void TestRemoveWithKeyValuePair()
+        {
+            var item = new KeyValuePair<string, string>("1", "value");
+            var observableDictionary = PerformObservableDictionarySetup(new List<KeyValuePair<string, string>> {item});
+
+            var latch = new CountdownEvent(4);
+
+            var collectionChangedActions = new List<NotifyCollectionChangedAction>();
+            var propertiesChanged = new List<string>();
+
+            void CollectionChangedHandler(object sender, NotifyCollectionChangedEventArgs args)
+            {
+                collectionChangedActions.Add(args.Action);
+                latch?.Signal();
+            }
+
+            void PropertyChangedHandler(object sender, PropertyChangedEventArgs args)
+            {
+                propertiesChanged.Add(args.PropertyName);
+                latch?.Signal();
+            }
+
+            observableDictionary.CollectionChanged += CollectionChangedHandler;
+            observableDictionary.PropertyChanged += PropertyChangedHandler;
+
+            var success = observableDictionary.Remove(item);
+
+            latch.Wait();
+
+            Assert.True(success);
+
+            Assert.Empty(observableDictionary);
+
+            Assert.Single(collectionChangedActions);
+            Assert.Equal(NotifyCollectionChangedAction.Remove, collectionChangedActions[0]);
+
+            Assert.Equal(3, propertiesChanged.Count);
+            Assert.Contains("Count", propertiesChanged);
+            Assert.Contains("Keys", propertiesChanged);
+            Assert.Contains("Values", propertiesChanged);
+        }
+
+        [Fact]
+        public void TestRemoveWithInvalidKeyValuePair()
+        {
+            var item = new KeyValuePair<string, string>("1", "value");
+            var invalidItem = new KeyValuePair<string, string>("2", "invalid");
+
+            var observableDictionary = PerformObservableDictionarySetup(new List<KeyValuePair<string, string>> {item});
+
+            var success = observableDictionary.Remove(invalidItem);
+
+            Assert.False(success);
+            Assert.Single(observableDictionary);
+        }
+
+        [Fact]
         public void TestRemoveWithInvalidKey()
         {
             var item = new KeyValuePair<string, string>("1", "value");
@@ -734,6 +791,30 @@ namespace PBase.Test.Utility
             Assert.Contains("Count", propertiesChanged);
             Assert.Contains("Keys", propertiesChanged);
             Assert.Contains("Values", propertiesChanged);
+        }
+
+        [Fact]
+        public void TestCopyTo()
+        {
+            var item = new KeyValuePair<string, string>("1", "value");
+            var item2 = new KeyValuePair<string, string>("2", "another value");
+            var item3 = new KeyValuePair<string, string>("3", "yet another value");
+            var observableDictionary = PerformObservableDictionarySetup(new List<KeyValuePair<string, string>> {item, item2, item3});
+
+            var array = new KeyValuePair<string, string>[3];
+            observableDictionary.CopyTo(array, 0);
+
+            Assert.Contains(item, array);
+            Assert.Contains(item2, array);
+            Assert.Contains(item3, array);
+        }
+
+
+        [Fact]
+        public void TestIsReadOnly()
+        {
+            var observableDictionary = new ObservableConcurrentDictionary<string, string>();
+            Assert.False(observableDictionary.IsReadOnly);
         }
     }
 }

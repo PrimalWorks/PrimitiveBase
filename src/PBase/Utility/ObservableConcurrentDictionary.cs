@@ -128,7 +128,7 @@ namespace PBase.Utility
         /// </exception>
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            ((IDictionary<TKey, TValue>) this).CopyTo(array, arrayIndex);
+            ((IDictionary<TKey, TValue>) m_dictionary).CopyTo(array, arrayIndex);
         }
 
         /// <summary>
