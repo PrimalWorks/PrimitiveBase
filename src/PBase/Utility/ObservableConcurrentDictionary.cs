@@ -64,7 +64,12 @@ namespace PBase.Utility
         {
             if (!((IDictionary<TKey, TValue>) m_dictionary).Remove(item)) return false;
 
-            NotifyObservers(NotifyCollectionChangedAction.Remove, new List<string> {"Count", "Keys", "Values"});
+            var propertiesChanged = new List<string> {"Count", "Keys", "Values"};
+
+            NotifyObservers(
+                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item),
+                propertiesChanged);
+
             return true;
         }
 
@@ -85,7 +90,11 @@ namespace PBase.Utility
         public void Clear()
         {
             m_dictionary.Clear();
-            NotifyObservers(NotifyCollectionChangedAction.Reset, new List<string> {"Count", "Keys", "Values"});
+
+            var propertiesChanged = new List<string> {"Count", "Keys", "Values"};
+
+            NotifyObservers(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset),
+                propertiesChanged);
         }
 
         /// <summary>
@@ -146,7 +155,12 @@ namespace PBase.Utility
         {
             ((IDictionary<TKey, TValue>) m_dictionary).Add(key, value);
 
-            NotifyObservers(NotifyCollectionChangedAction.Add, new List<string> {"Count", "Keys", "Values"});
+            var newItem = new KeyValuePair<TKey, TValue>(key, value);
+            var propertiesChanged = new List<string> {"Count", "Keys", "Values"};
+
+            NotifyObservers(
+                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItem),
+                propertiesChanged);
         }
 
         /// <summary>
@@ -218,7 +232,7 @@ namespace PBase.Utility
         /// <summary>
         ///     Notifies observers by invoking the collection changed and property changed event handlers.
         /// </summary>
-        private void NotifyObservers(NotifyCollectionChangedAction action, IEnumerable<string> propertiesChanged)
+        private void NotifyObservers(NotifyCollectionChangedEventArgs action, IEnumerable<string> propertiesChanged)
         {
             m_context.Post(s =>
             {
@@ -230,13 +244,10 @@ namespace PBase.Utility
         /// <summary>
         ///     Invokes the collection changed event handler if one exists.
         /// </summary>
-        private void OnCollectionChanged(NotifyCollectionChangedAction action)
+        private void OnCollectionChanged(NotifyCollectionChangedEventArgs action)
         {
             var collectionHandler = CollectionChanged;
-            collectionHandler?.Invoke(this,
-                action == NotifyCollectionChangedAction.Reset
-                    ? new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)
-                    : new NotifyCollectionChangedEventArgs(action, this));
+            collectionHandler?.Invoke(this, action);
         }
 
         /// <summary>
@@ -263,7 +274,13 @@ namespace PBase.Utility
         {
             if (!m_dictionary.TryAdd(key, value)) return false;
 
-            NotifyObservers(NotifyCollectionChangedAction.Add, new List<string> {"Count", "Keys", "Values"});
+            var newItem = new KeyValuePair<TKey, TValue>(key, value);
+            var propertiesChanged = new List<string> {"Count", "Keys", "Values"};
+
+            NotifyObservers(
+                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItem),
+                propertiesChanged);
+
             return true;
         }
 
@@ -283,7 +300,13 @@ namespace PBase.Utility
         {
             if (!m_dictionary.TryRemove(key, out value)) return false;
 
-            NotifyObservers(NotifyCollectionChangedAction.Remove, new List<string> {"Count", "Keys", "Values"});
+            var oldItem = new KeyValuePair<TKey, TValue>(key, value);
+            var propertiesChanged = new List<string> {"Count", "Keys", "Values"};
+
+            NotifyObservers(
+                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, oldItem),
+                propertiesChanged);
+
             return true;
         }
 
@@ -304,7 +327,14 @@ namespace PBase.Utility
         {
             if (!m_dictionary.TryUpdate(key, newValue, comparisonValue)) return false;
 
-            NotifyObservers(NotifyCollectionChangedAction.Replace, new List<string> {"Keys", "Values"});
+            var newItem = new KeyValuePair<TKey, TValue>(key, newValue);
+            var oldItem = new KeyValuePair<TKey, TValue>(key, comparisonValue);
+            var propertiesChanged = new List<string> {"Keys", "Values"};
+
+            NotifyObservers(
+                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItem, oldItem),
+                propertiesChanged);
+
             return true;
         }
 
@@ -337,19 +367,10 @@ namespace PBase.Utility
         /// </returns>
         public bool AddOrUpdate(TKey key, TValue value)
         {
-            if (TryAdd(key, value))
-            {
-                NotifyObservers(NotifyCollectionChangedAction.Add, new List<string> {"Count", "Keys", "Values"});
-                return true;
-            }
+            if (TryAdd(key, value)) return true;
 
-            if (TryUpdate(key, value, m_dictionary[key]))
-            {
-                NotifyObservers(NotifyCollectionChangedAction.Replace, new List<string> {"Keys", "Values"});
-                return true;
-            }
-
-            return false;
+            var comparisonValue = m_dictionary[key];
+            return TryUpdate(key, value, comparisonValue);
         }
     }
 }
