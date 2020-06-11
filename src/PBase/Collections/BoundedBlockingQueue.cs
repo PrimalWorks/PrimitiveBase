@@ -7,21 +7,18 @@ namespace PBase.Collections
 {
     public sealed class BoundedBlockingQueue<T> : BaseDisposable, ICollection<T> where T : class
     {
-        //TODO
-        //source code documentation w/ author
-        //
-        //could possibly add option for different timeouts
-        //so someone might want to wait indefinitely for a lock
-        //but not for an available space in the queue
-        //could add task cancellation tokens for overloads
-        //complete adding method? to disallow future additions
+        //Possible additions
+        // - Using cancellation tokens
+        // - CompleteEnqueuing method
+        // - Different timeout parameters for entering thread lock and waiting for free space to enqueue
+        //      item to peek or dequeue
 
         #region Private Fields
-        private readonly int m_size;
-        private T[] m_items;
-        private int m_count;
-        private int m_head;
-        private int m_tail;
+        private readonly int m_size;    // The maximum size of the queue
+        private T[] m_items;            // The internal array to store queue items
+        private int m_count;            // The current number of items in the queue
+        private int m_head;             // The head of the queue, used in peeking and dequeuing
+        private int m_tail;             // The tail of the queue, used when enqueuing
         #endregion
 
         #region Public Properties
@@ -124,8 +121,8 @@ namespace PBase.Collections
         #endregion
 
         #region Methods
-        #region Add/Enqueue Methods
-        public bool Enqueue(T item, int timeoutMilliseconds = -1)
+        #region Enqueue/Add Methods
+        public void Enqueue(T item, int timeoutMilliseconds = -1)
         {
             if (item == null)
             {
@@ -158,15 +155,13 @@ namespace PBase.Collections
                     }
                 }
 
-                m_items[m_tail++] = item;
-                m_tail %= m_size;
-                m_count++;
+                m_items[m_tail++] = item;   // Place the new item immediately after tail, then increment tail pos
+                m_tail %= m_size;           // Modulus new tail pos with size so queue items will wrap around
+                m_count++;                  // Count will never be more than size after incrementing here
 
                 //Signal that an item has been enqueued to unblock waiting
                 //dequeue threads
                 syncLock.PulseAll();
-
-                return true;
             }
         }
 
@@ -197,9 +192,9 @@ namespace PBase.Collections
                     return false;
                 }
 
-                m_items[m_tail++] = item;
-                m_tail %= m_size;
-                m_count++;
+                m_items[m_tail++] = item;   // Place the new item immediately after tail, then increment tail pos
+                m_tail %= m_size;           // Modulus new tail pos with size so queue items will wrap around
+                m_count++;                  // Count will never be more than size after incrementing here
 
                 //Signal that an item has been enqueued to unblock waiting
                 //dequeue threads
@@ -274,7 +269,7 @@ namespace PBase.Collections
         }
         #endregion
 
-        #region Remove/Dequeue Methods
+        #region Dequeue/Remove Methods
         public T Dequeue(int timeoutMilliseconds = -1)
         {
             if (IsDisposing || IsDisposed)
@@ -301,10 +296,10 @@ namespace PBase.Collections
                     }
                 }
 
-                T value = m_items[m_head];
-                m_items[m_head++] = null;
-                m_head %= m_size;
-                m_count--;
+                T value = m_items[m_head];  // Get item at head of queue
+                m_items[m_head++] = null;   // Clear item at head of queue then increment head pos
+                m_head %= m_size;           // Modulus new head pos with size so queue items will wrap around
+                m_count--;                  // Count will never be less than zero after decrementing here 
 
                 //Signal that an item has been dequeued to unblock waiting
                 //enqueue threads
@@ -331,10 +326,10 @@ namespace PBase.Collections
                     return false;
                 }
 
-                item = m_items[m_head];
-                m_items[m_head++] = null;
-                m_head %= m_size;
-                m_count--;
+                item = m_items[m_head];     // Get item at head of queue
+                m_items[m_head++] = null;   // Clear item at head of queue then increment head pos
+                m_head %= m_size;           // Modulus new head pos with size so queue items will wrap around
+                m_count--;                  // Count will never be less than zero after decrementing here 
 
                 //Signal that an item has been dequeued to unblock waiting
                 //enqueue threads
@@ -396,11 +391,13 @@ namespace PBase.Collections
         #region Enumerator Getters
         public IEnumerator<T> GetEnumerator()
         {
+            //Using Values Enumerator
             return (IEnumerator<T>)Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
+            //Using Values Enumerator
             return Values.GetEnumerator();
         }
         #endregion

@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
+#pragma warning disable xUnit2013 // Do not use equality check to check for collection size.
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
 namespace PBase.Test.Collections
 {
     public class BoundedBlockingQueueTests : BaseUnitTest
@@ -18,10 +21,7 @@ namespace PBase.Test.Collections
         {
             public int Value { get; set; }
         }
-
-#pragma warning disable xUnit2013 // Do not use equality check to check for collection size.
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-
+        
         [Fact]
         void TestBoundedBlockingQueueCreation()
         {
@@ -31,19 +31,60 @@ namespace PBase.Test.Collections
 
             Assert.Equal(5, bbq.Size);
             Assert.Equal(0, bbq.Count);
+            Assert.NotNull(bbq.QueueSyncRoot);
+            Assert.False(bbq.IsReadOnly);
+
+            BoundedBlockingQueue<TestQueueItem> invalidBBQ = null;
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                invalidBBQ = new BoundedBlockingQueue<TestQueueItem>(0);
+            });
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                invalidBBQ = new BoundedBlockingQueue<TestQueueItem>(-1);
+            });
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                invalidBBQ = new BoundedBlockingQueue<TestQueueItem>(-5);
+            });
+
+            Assert.Null(invalidBBQ);
         }
 
         [Fact]
         async void TestBoundedBlockingQueueEnqueueDequeue()
         {
             BoundedBlockingQueue<TestQueueItem> bbq = new BoundedBlockingQueue<TestQueueItem>(2);
+
+            Assert.Equal(0, bbq.Count);
+            Assert.Equal(2, bbq.Size);
+
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                bbq.Enqueue(null);
+            });
+
+            Assert.Equal(0, bbq.Count);
+
+            Assert.False(bbq.TryEnqueue(null));
+
+            Assert.Equal(0, bbq.Count);
+
             bbq.Enqueue(new TestQueueItem { Value = 100 });
             bbq.Enqueue(new TestQueueItem { Value = 200 });
 
-            Assert.Equal(2, bbq.Size);
             Assert.Equal(2, bbq.Count);
 
             Assert.Throws<TimeoutException>(() => bbq.Enqueue(new TestQueueItem { Value = 300 }, 1000));
+
+            Assert.Equal(2, bbq.Count);
+
+            Assert.False(bbq.TryEnqueue(new TestQueueItem { Value = 300 }, 1000));
+
+            Assert.Equal(2, bbq.Count);
 
             var item100 = bbq.Dequeue();
 
@@ -79,9 +120,29 @@ namespace PBase.Test.Collections
             Assert.Equal(1, bbq.Count);
             Assert.Equal(400, item400.Value);
 
-            var item600 = bbq.Dequeue();
+            bool tryDeqRes = bbq.TryDequeue(out var item600);
+            Assert.True(tryDeqRes);
             Assert.Equal(0, bbq.Count);
             Assert.Equal(600, item600.Value);
+
+            TestQueueItem itemNull = null;
+            Assert.Throws<TimeoutException>(() => itemNull = bbq.Dequeue(500));
+            Assert.Null(itemNull);
+
+            TestQueueItem item700 = null;
+            Task.Run(() =>
+            {
+                item700 = bbq.Dequeue();
+            });
+
+            await Task.Delay(1000); //allow enough time for task to set up
+
+            bbq.Enqueue(new TestQueueItem { Value = 700 });
+
+            await Task.Delay(1000); //allow enough time for task to dequeue 700
+
+            Assert.Equal(700, item700.Value);
+            Assert.Equal(0, bbq.Count);
         }
 
         [Fact]
@@ -95,43 +156,55 @@ namespace PBase.Test.Collections
             Assert.Equal(2, bbq.Count);
 
             bbq.Enqueue(new TestQueueItem { Value = 300 });
-
-            bool succEnq = false;
-
+            
             Task.Run(async () =>
             {
                 await Task.Delay(1000); //have to wait as new item will be enqueued immediately after clearing
-                succEnq = bbq.Enqueue(new TestQueueItem { Value = 400 });
+                bbq.Enqueue(new TestQueueItem { Value = 400 });
             });
 
             bbq.Clear();
+
+            Assert.Equal(0, bbq.Count);
 
             var result = bbq.TryDequeue(out var qItem);
             Assert.False(result);
             Assert.Null(qItem);
 
             await Task.Delay(1000);
-            Assert.True(succEnq);
             Assert.Equal(1, bbq.Count);
             var item400 = bbq.Dequeue();
             Assert.Equal(400, item400.Value);
 
             bbq.Dispose();
 
-            Assert.Throws<ObjectDisposedException>(() =>
-            {
-                var count = bbq.Count;
-            });
+            Assert.True(bbq.IsDisposed);
 
-            Assert.Throws<ObjectDisposedException>(() =>
-            {
-                var size = bbq.Size;
-            });
+            Assert.Throws<ObjectDisposedException>(() => bbq.Count);
 
-            Assert.Throws<ObjectDisposedException>(() =>
-            {
-                var res = bbq.Enqueue(new TestQueueItem { Value = 1000 });
-            });
+            Assert.Throws<ObjectDisposedException>(() => bbq.Size);
+
+            Assert.Throws<ObjectDisposedException>(() => bbq.QueueSyncRoot);
+
+            Assert.Throws<ObjectDisposedException>(() => bbq.Values);
+
+            Assert.Throws<ObjectDisposedException>(() => bbq.IsReadOnly);
+
+            Assert.Throws<ObjectDisposedException>(() => bbq.Enqueue(new TestQueueItem { Value = 1000 }));
+
+            Assert.False(bbq.TryEnqueue(new TestQueueItem { Value = 1000 }));
+
+            Assert.Throws<ObjectDisposedException>(() => bbq.Peek());
+
+            var resTryPeek = bbq.TryPeek(out var itemPeek);
+            Assert.False(resTryPeek);
+            Assert.Null(itemPeek);
+
+            Assert.Throws<ObjectDisposedException>(() => bbq.Dequeue());
+
+            var resTryDeq = bbq.TryDequeue(out var itemDequeue);
+            Assert.False(resTryDeq);
+            Assert.Null(itemDequeue);
         }
 
         [Fact]
@@ -174,6 +247,9 @@ namespace PBase.Test.Collections
             Assert.Contains(item100, values);
             Assert.Contains(item200, values);
             Assert.Contains(item300, values);
+            Assert.Contains(item100, bbq);
+            Assert.Contains(item200, bbq);
+            Assert.Contains(item300, bbq);
 
             bool exceptionThrown = false;
 
@@ -224,9 +300,13 @@ namespace PBase.Test.Collections
             values = bbq.Values;
 
             Assert.Equal(3, values.Length);
+            Assert.Equal(3, bbq.Count);
             Assert.Contains(item400, values);
             Assert.Contains(item500, values);
             Assert.Contains(item600, values);
+            Assert.Contains(item400, bbq);
+            Assert.Contains(item500, bbq);
+            Assert.Contains(item500, bbq);
         }
 
         [Fact]
@@ -234,10 +314,23 @@ namespace PBase.Test.Collections
         {
             BoundedBlockingQueue<TestQueueItem> bbq = new BoundedBlockingQueue<TestQueueItem>(1);
 
-            bool peekEmpty = bbq.TryPeek(out var testQueueItem);
+            Assert.Equal(0, bbq.Count);
 
-            Assert.False(peekEmpty);
+            bool tryPeekEmpty = bbq.TryPeek(out var testQueueItem);
+
+            Assert.False(tryPeekEmpty);
             Assert.Null(testQueueItem);
+
+            TestQueueItem emptyItem = null;
+
+            Assert.Throws<InvalidOperationException>(() => emptyItem = bbq.Peek());
+
+            Assert.Null(emptyItem);
+
+            Assert.Throws<TimeoutException>(() => emptyItem = bbq.Peek(500, true));
+
+            Assert.Null(emptyItem);
+            Assert.Equal(0, bbq.Count);
 
             bbq.Enqueue(new TestQueueItem { Value = 100 });
 
@@ -276,9 +369,36 @@ namespace PBase.Test.Collections
             Assert.Equal(200, item200.Value);
 
             Assert.False(exceptionThrown);
+
+            bool tryPeekRes = bbq.TryPeek(out var item200TryPeek);
+
+            Assert.Equal(1, bbq.Count);
+            Assert.True(tryPeekRes);
+            Assert.Equal(200, item200.Value);
         }
+
+        [Fact]
+        void TestBoundedBlockingQueueCopy()
+        {
+            BoundedBlockingQueue<TestQueueItem> bbq = new BoundedBlockingQueue<TestQueueItem>(3);
+
+            bbq.Enqueue(new TestQueueItem { Value = 100 });
+            bbq.Enqueue(new TestQueueItem { Value = 200 });
+            bbq.Enqueue(new TestQueueItem { Value = 300 });
+
+            var values = bbq.Values;
+
+            TestQueueItem[] copyArray = new TestQueueItem[bbq.Size];
+            bbq.CopyTo(copyArray, 0);
+
+            foreach (var item in copyArray)
+            {
+                Assert.Contains(item, bbq);
+                Assert.Contains(item, values);
+            }
+        }
+    }
+}
 
 #pragma warning restore xUnit2013 // Do not use equality check to check for collection size.
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-    }
-}
