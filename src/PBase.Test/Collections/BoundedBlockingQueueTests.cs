@@ -370,7 +370,7 @@ namespace PBase.Test.Collections
 
             bbq.Enqueue(new TestQueueItem { Value = 200 });
 
-            await Task.Delay(1000);
+            await Task.Delay(2000);
 
             Assert.Equal(1, bbq.Count);
             Assert.Equal(200, item200.Value);
