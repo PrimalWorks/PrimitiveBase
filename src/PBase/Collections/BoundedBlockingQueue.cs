@@ -174,14 +174,14 @@ namespace PBase.Collections
 
         public bool TryEnqueue(T item, int timeoutMilliseconds = 0)
         {
+            if (item == null)
+            {
+                return false;
+            }
+
             //The method only throws exception on thread lock timeout
             using (IWaitable syncLock = SyncRoot.Enter(timeoutMilliseconds) as IWaitable)
             {
-                if (item == null)
-                {
-                    return false;
-                }
-
                 if (IsDisposing || IsDisposed)
                 {
                     return false;
@@ -214,7 +214,7 @@ namespace PBase.Collections
                 {
                     throw new ObjectDisposedException(nameof(BoundedBlockingQueue<T>));
                 }
-                
+
                 if (m_count == 0)
                 {
                     if (waitForEnqueue)

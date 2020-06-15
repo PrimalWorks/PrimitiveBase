@@ -1,6 +1,7 @@
 ﻿using PBase.Collections;
 using PBase.Test.Support;
 using System;
+using System.Collections;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -21,7 +22,7 @@ namespace PBase.Test.Collections
         {
             public int Value { get; set; }
         }
-        
+
         [Fact]
         void TestBoundedBlockingQueueCreation()
         {
@@ -156,7 +157,7 @@ namespace PBase.Test.Collections
             Assert.Equal(2, bbq.Count);
 
             bbq.Enqueue(new TestQueueItem { Value = 300 });
-            
+
             Task.Run(async () =>
             {
                 await Task.Delay(1000); //have to wait as new item will be enqueued immediately after clearing
@@ -171,7 +172,7 @@ namespace PBase.Test.Collections
             Assert.False(result);
             Assert.Null(qItem);
 
-            await Task.Delay(1000);
+            await Task.Delay(1500);
             Assert.Equal(1, bbq.Count);
             var item400 = bbq.Dequeue();
             Assert.Equal(400, item400.Value);
@@ -205,6 +206,12 @@ namespace PBase.Test.Collections
             var resTryDeq = bbq.TryDequeue(out var itemDequeue);
             Assert.False(resTryDeq);
             Assert.Null(itemDequeue);
+
+            Assert.Throws<ObjectDisposedException>(() => bbq.Contains(new TestQueueItem { Value = 1000 }));
+            Assert.Throws<ObjectDisposedException>(() => bbq.CopyTo(new TestQueueItem[3], 0));
+
+            Assert.Throws<ObjectDisposedException>(() => bbq.GetEnumerator());
+            Assert.Throws<ObjectDisposedException>(() => (bbq as IEnumerable).GetEnumerator());
         }
 
         [Fact]
@@ -359,7 +366,7 @@ namespace PBase.Test.Collections
                 }
             });
 
-            await Task.Delay(1000);
+            await Task.Delay(1500);
 
             bbq.Enqueue(new TestQueueItem { Value = 200 });
 
