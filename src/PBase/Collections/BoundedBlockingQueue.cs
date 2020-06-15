@@ -9,7 +9,6 @@ namespace PBase.Collections
     {
         //Possible additions
         // - Using cancellation tokens
-        // - CompleteEnqueuing method
         // - Different timeout parameters for entering thread lock and waiting for free space to enqueue
         //      item to peek or dequeue
 
