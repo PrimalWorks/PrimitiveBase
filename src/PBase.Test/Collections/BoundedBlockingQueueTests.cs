@@ -176,8 +176,29 @@ namespace PBase.Test.Collections
             Assert.Equal(1, bbq.Count);
             var item400 = bbq.Dequeue();
             Assert.Equal(400, item400.Value);
+            Assert.Equal(0, bbq.Count);
+
+            bool threwObjectDisposedEx = false;
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    bbq.Dequeue();
+                }
+                catch (ObjectDisposedException ex)
+                {
+                    threwObjectDisposedEx = true;
+                }
+            });
+
+            await Task.Delay(1500);
 
             bbq.Dispose();
+
+            await Task.Delay(1500);
+
+            Assert.True(threwObjectDisposedEx);
 
             Assert.True(bbq.IsDisposed);
 
