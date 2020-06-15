@@ -365,9 +365,7 @@ namespace PBase.Test.Collections
                     exceptionThrown = true;
                 }
             });
-
-            await Task.Delay(1500);
-
+            
             bbq.Enqueue(new TestQueueItem { Value = 200 });
 
             await Task.Delay(2000);
