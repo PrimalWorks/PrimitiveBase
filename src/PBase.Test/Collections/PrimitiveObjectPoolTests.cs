@@ -1,6 +1,7 @@
 ﻿using PBase.Collections;
 using PBase.Test.Support;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -277,11 +278,9 @@ namespace PBase.Test.Collections
             Assert.Equal(0, resizePool.InUse);
             Assert.Equal(6, resizePool.PoolCount);
         }
-
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-
+        
         [Fact]
-        async void TestBlockingPrimitiveObjectPoolObtainRelease()
+        void TestBlockingPrimitiveObjectPoolObtainRelease()
         {
             BlockingPrimitiveObjectPool<TestObjectPoolItem> blockPool = new BlockingPrimitiveObjectPool<TestObjectPoolItem>(3);
 
@@ -297,20 +296,24 @@ namespace PBase.Test.Collections
             Assert.Equal(0, blockPool.InUse);
             Assert.Equal(3, blockPool.PoolCount);
 
+            AutoResetEvent autoResetEvent = new AutoResetEvent(false);
+
             Task.Run(() =>
             {
+                autoResetEvent.Set();
                 blockPool.Release(test);
+                autoResetEvent.Set();
             });
-
-            await Task.Delay(500);
+            
+            autoResetEvent.WaitOne();
 
             Assert.Equal(3, blockPool.Size);
             Assert.Equal(0, blockPool.InUse);
             Assert.Equal(3, blockPool.PoolCount);
 
             var newTest = blockPool.Obtain();
-
-            await Task.Delay(500);
+            
+            autoResetEvent.WaitOne();
 
             Assert.NotNull(newTest);
             Assert.Equal(3, blockPool.Size);
@@ -353,22 +356,27 @@ namespace PBase.Test.Collections
 
             Task.Run(() =>
             {
+                autoResetEvent.Set();
                 test4 = blockPool.Obtain();
+                autoResetEvent.Set();
             });
 
             Task.Run(() =>
             {
+                autoResetEvent.Set();
                 test5 = blockPool.Obtain();
+                autoResetEvent.Set();
             });
-
-            await Task.Delay(500);
+            
+            autoResetEvent.WaitOne();
+            autoResetEvent.WaitOne();
 
             Assert.Null(test4);
             Assert.Null(test5);
 
             blockPool.Release(test1);
-
-            await Task.Delay(500);
+            
+            autoResetEvent.WaitOne();
 
             Assert.Equal(3, blockPool.Size);
             Assert.Equal(3, blockPool.InUse);
@@ -377,8 +385,8 @@ namespace PBase.Test.Collections
             Assert.True((test4 != null) ^ (test5 != null));
 
             blockPool.Release(test1);
-
-            await Task.Delay(1000);
+            
+            autoResetEvent.WaitOne();
 
             Assert.NotNull(test4);
             Assert.NotNull(test5);
@@ -412,11 +420,13 @@ namespace PBase.Test.Collections
             {
                 try
                 {
+                    autoResetEvent.Set();
                     blockPool.Release(test1);
                 }
                 catch (ObjectDisposedException ex)
                 {
                     dispose1 = true;
+                    autoResetEvent.Set();
                 }
             });
 
@@ -424,29 +434,30 @@ namespace PBase.Test.Collections
             {
                 try
                 {
+                    autoResetEvent.Set();
                     blockPool.Release(test2);
                 }
                 catch (ObjectDisposedException ex)
                 {
                     dispose2 = true;
+                    autoResetEvent.Set();
                 }
             });
-
-            await Task.Delay(500);
+            
+            autoResetEvent.WaitOne();
+            autoResetEvent.WaitOne();
 
             Assert.Equal(3, blockPool.Size);
             Assert.Equal(0, blockPool.InUse);
             Assert.Equal(3, blockPool.PoolCount);
 
             blockPool.Dispose();
-
-            await Task.Delay(500);
+            
+            autoResetEvent.WaitOne();
+            autoResetEvent.WaitOne();
 
             Assert.True(dispose1);
             Assert.True(dispose2);
         }
-
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-
     }
 }
