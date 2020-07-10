@@ -3,6 +3,10 @@ using System.Collections.Concurrent;
 
 namespace PBase.Collections
 {
+    /// <summary>
+    /// Default implementation of <c>PrimitiveObjectPool</c>
+    /// </summary>
+    /// <typeparam name="T"><c>T</c> must be a class with a parameterless constructor</typeparam>
     public class PrimitiveObjectPool<T> : BaseDisposable where T : class, new()
     {
         #region Private/Protected Fields
@@ -12,6 +16,10 @@ namespace PBase.Collections
         #endregion
 
         #region Public Properties
+        /// <summary>
+        /// Total size of the object pool - equal to InUse + PoolCount
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">throws when accessed during or after disposal</exception>
         public int Size
         {
             get
@@ -35,6 +43,11 @@ namespace PBase.Collections
             }
         }
 
+        /// <summary>
+        /// Number of objects currently used by the application
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">throws when accessed during or after disposal</exception>
+        /// <exception cref="Exception">throws if set to less than 0</exception>
         public int InUse
         {
             get
@@ -63,6 +76,10 @@ namespace PBase.Collections
             }
         }
 
+        /// <summary>
+        /// Number of objects still in the object pool
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">throws when accessed during or after disposal</exception>
         public int PoolCount
         {
             get
@@ -78,6 +95,11 @@ namespace PBase.Collections
         #endregion
 
         #region Constructor
+        /// <summary>
+        /// Create a default <c>PrimitiveObjectPool</c> which holds a number of objects
+        /// </summary>
+        /// <param name="size">the number of objects this object pool will hold</param>
+        /// <exception cref="ArgumentOutOfRangeException">throws if <c>size</c> parameter is less than 1</exception>
         public PrimitiveObjectPool(int size)
         {
             if (size < 1)
@@ -109,6 +131,11 @@ namespace PBase.Collections
         #endregion
 
         #region Obtain Methods
+        /// <summary>
+        /// <c>Obtain</c> and remove an object from the pool
+        /// </summary>
+        /// <returns>returns an object of type <typeparamref name="T"/> from the pool</returns>
+        /// <exception cref="InvalidOperationException">throws if there are no more objects in the pool to be obtained</exception>
         public virtual T Obtain()
         {
             if (TryObtain(out T item))
@@ -121,6 +148,12 @@ namespace PBase.Collections
             }
         }
 
+        /// <summary>
+        /// <c>TryObtain</c> an object and remove it from the pool - does not throw an exception if pool is empty
+        /// </summary>
+        /// <param name="item">the object obtained from the pool, if successful - null if unsuccessful</param>
+        /// <returns>returns true if successful, false if unsuccessful i.e. pool is empty</returns>
+        /// <exception cref="ObjectDisposedException">throws when accessed during or after disposal</exception>
         public bool TryObtain(out T item)
         {
             using (SyncRoot.Enter())
@@ -145,6 +178,11 @@ namespace PBase.Collections
         #endregion
 
         #region Release Methods
+        /// <summary>
+        /// <c>Release</c> an object and add it back into the pool
+        /// </summary>
+        /// <param name="item">the object released back into the pool</param>
+        /// <exception cref="InvalidOperationException">throws if the pool is full</exception>
         public virtual void Release(T item)
         {
             //Default implementation when releasing on full pool - throw exception
@@ -154,6 +192,12 @@ namespace PBase.Collections
             }
         }
 
+        /// <summary>
+        /// <c>TryRelease</c> an object and add it back into the pool - does not throw exception if pool is full
+        /// </summary>
+        /// <param name="item">the object released back into the pool</param>
+        /// <returns>returns true if successful, false if successful i.e. if pool is full</returns>
+        /// <exception cref="ObjectDisposedException">throws when accessed during or after disposal</exception>
         public bool TryRelease(T item)
         {
             using (SyncRoot.Enter())

@@ -3,6 +3,10 @@ using System.Threading;
 
 namespace PBase.Collections
 {
+    /// <summary>
+    /// <c>BlockingPrimitiveObjectPool</c> blocks when obtaining on empty pool and releasing on full pool
+    /// </summary>
+    /// <typeparam name="T"><c>T</c> must be a class with a parameterless constructor</typeparam>
     public class BlockingPrimitiveObjectPool<T> : PrimitiveObjectPool<T> where T : class, new()
     {
         #region Private Fields
@@ -11,6 +15,11 @@ namespace PBase.Collections
         #endregion
 
         #region Constructor
+        /// <summary>
+        /// Create a <c>BlockingPrimitiveObjectPool</c> that blocks instead of throwing an <c>ArgumentOutOfRangeException</c>
+        /// </summary>
+        /// <param name="size">the number of objects this object pool will hold</param>
+        /// <exception cref="ArgumentOutOfRangeException">throws if <c>size</c> parameter is less than 1</exception>
         public BlockingPrimitiveObjectPool(int size) : base(size)
         {
             m_event = new ManualResetEvent(false);
@@ -30,6 +39,11 @@ namespace PBase.Collections
         #endregion
 
         #region Overridden Obtain and Release methods
+        /// <summary>
+        /// <c>Obtain</c> and remove an object from the pool - blocks thread until an object can be obtained
+        /// </summary>
+        /// <returns>returns an object of type <typeparamref name="T"/> from the pool</returns>
+        /// <exception cref="ObjectDisposedException">throws when accessed during or after disposal</exception>
         public override T Obtain()
         {
             T item;
@@ -50,6 +64,11 @@ namespace PBase.Collections
             return item;
         }
 
+        /// <summary>
+        /// <c>Release</c> an object and add it back into the pool - blocks thread until the object can be released back into the pool
+        /// </summary>
+        /// <param name="item">the object released back into the pool</param>
+        /// <exception cref="ObjectDisposedException">throws when accessed during or after disposal</exception>
         public override void Release(T item)
         {
             //Multiple threads could be waiting for successful Obtain
