@@ -6,7 +6,7 @@
 
 # PrimitiveBase
 
-General set of base classes implementing the primitive concepts and useful utilities that are required for all but the basic of libraries and applications.
+General set of base classes implementing the primitive concepts and useful utilities that are required for all but the basic of libraries and applications. Core to our approach is Dependency Injection and Unit Testing - all components have be factored to assist developers with both concepts, things like static state have been avoided to ensure injection and parallel testing can take place without any issues.
 
 Currently a few Core base classes are implemented;
 
