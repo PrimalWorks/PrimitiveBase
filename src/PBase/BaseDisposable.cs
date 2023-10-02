@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace PBase
 {
@@ -32,7 +30,7 @@ namespace PBase
             {
                 Dispose(true);
             }
-            catch (Exception)
+            catch
             {
                 // Disposing so not much we can do with this exception
             }

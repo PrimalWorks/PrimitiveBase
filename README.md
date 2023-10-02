@@ -2,22 +2,28 @@
 [![NuGet Version](https://img.shields.io/nuget/v/PrimitiveBase.svg)](https://www.nuget.org/packages?q=PrimitiveBase)
 [![Nuget Downloads](https://img.shields.io/nuget/dt/PrimitiveBase.svg)](https://www.nuget.org/packages?q=PrimitiveBase)
 [![License](https://img.shields.io/github/license/ekwus/PrimitiveBase.svg)](https://raw.githubusercontent.com/ekwus/PrimitiveBase/master/LICENSE)
+[![Coverage](https://codecov.io/gh/ekwus/PrimitiveBase/branch/master/graph/badge.svg)](https://codecov.io/gh/ekwus/PrimitiveBase)
 
 # PrimitiveBase
 
-General set of base classes implementing the primitive concepts and useful utilities that are required for all but the basic of libraries and applications.
+General set of base classes implementing the primitive concepts and useful utilities that are required for all but the basic of libraries and applications. Core to our approach is Dependency Injection and Unit Testing - all components have be factored to assist developers with both concepts, things like static state have been avoided to ensure injection and parallel testing can take place without any issues.
 
 Currently a few Core base classes are implemented;
 
-* 'SafeLock'
-* 'BaseSyncronised'
-* 'BaseDisposable'
-* 'BaseNotifiable'
+*   `SafeLock`
+    A lockable object that timeouts to prevent potential deadlock situations
+*   `BaseSyncronised`
+    Providing a SyncRoot of `SafeLock` type for use with `using(SyncRoot.Enter()) { ... }`
+*   `BaseDisposable`
+    Implements a Disposable pattern for quick and simple use
+*   `BaseNotifiable`
+    Implements `INotifyPropertyChanged` for use when your classes are using binding
+*   `PLog`
+    A logging framework based on `ILogger` and `ILoggerFactory` so you can use your favourite Logger such as NLog, Serilog or log4net
 
 A start to the Networking namespace has been made with;
 
-* 'NetAddress'
+*   `NetAddress`
+    Wraps up IPEndPoint with helpful string based construction. This will be used throughout the future networking classes
 
 Further Networking classes will be added once the unit testable wrappers have been created for `Socket` and `SocketAsyncEventArgs`
-
-There is also a plan to provide logging that will utilise 'ILogger' and the flexibility to use any of the logging frameworks.

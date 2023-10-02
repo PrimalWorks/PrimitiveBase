@@ -1,14 +1,21 @@
 ﻿using PBase.Networking;
+using PBase.Test.Support;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace PBase.Test.Networking
 {
-    public class NetAddressTests
+    public class NetAddressTests : BaseUnitTest
     {
+        public NetAddressTests(ITestOutputHelper testOutputHelper)
+            :base(testOutputHelper)
+        {
+        }
+
         [Fact]
         public void TestNetAddress()
         {

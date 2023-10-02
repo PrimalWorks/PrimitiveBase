@@ -1,6 +1,9 @@
 image: Visual Studio 2017
 version: 0.4.{build}
 
+configuration:
+  - Debug
+  - Release
 before_build:
   - choco install codecov
   - nuget restore
@@ -8,7 +11,16 @@ build_script:
   - dotnet build PrimitiveBase.sln
 test_script:
   - dotnet test /p:CollectCoverage=true /p:Include=[PBase]* /p:CoverletOutputFormat=opencover /p:CoverletOutput=../../
-  - dir
 after_test:
-  - dir
   - codecov -f "coverage.opencover.xml" -t $CODECOV
+
+artifacts:
+  - path: '**\*.nupkg'
+
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}'
+  package_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'
