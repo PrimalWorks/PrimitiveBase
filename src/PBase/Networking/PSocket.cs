@@ -6,6 +6,8 @@ namespace PBase.Networking
 {
     public class PSocket : Socket, ISocket
     {
+        private const int DEFAULT_BACKLOG = 128;
+
         public PSocket(AddressFamily family, SocketType socketType, ProtocolType protocolType)
             : base(family, socketType, protocolType)
         {
@@ -30,6 +32,26 @@ namespace PBase.Networking
         public void Disconnect(bool reuseSocket)
         {
             base.Disconnect(reuseSocket);
+        }
+
+        public void Bind(NetAddress local)
+        {
+            base.Bind(local);
+        }
+
+        public void Listen()
+        {
+            base.Listen(DEFAULT_BACKLOG);
+        }
+
+        public void Listen(int backlog)
+        {
+            base.Listen(backlog);
+        }
+
+        public bool AcceptAsync(ISocketAsyncEventArgs args)
+        {
+            return base.AcceptAsync((SocketAsyncEventArgs)args);
         }
     }
 }

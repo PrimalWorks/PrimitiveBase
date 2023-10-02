@@ -9,6 +9,17 @@ namespace PBase.Networking
         public new int Count => base.Count;
         public new int BytesTransferred => base.BytesTransferred;
         public new byte[] Buffer => base.Buffer;
+        public ISocket AcceptSocket
+        {
+            get
+            {
+                return base.AcceptSocket as ISocket;
+            }
+            set
+            {
+                base.AcceptSocket = value as Socket;
+            }
+        }
 
         public new void SetBuffer(byte[] buffer, int offset, int count)
         {
