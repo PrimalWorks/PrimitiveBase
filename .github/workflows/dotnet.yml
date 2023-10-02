@@ -28,7 +28,7 @@ jobs:
       - name: Build
         run: dotnet build $SOLUTION --configuration $BUILD_CONFIG --no-restore
       - name: Test
-        run: dotnet test /p:CollectCoverage=true /p:Include=[PBase]* /p:CoverletOutputFormat=opencover /p:CoverletOutput=../../ --no-restore --no-build
+        run: dotnet test /p:CollectCoverage=true /p:Configuration=$BUILD_CONFIG /p:Include=[PBase]* /p:CoverletOutputFormat=opencover /p:CoverletOutput=../../ --no-restore --no-build
       - name: Publish
         if: startsWith(github.ref, 'refs/heads/release')
         run: nuget push **\*.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{secrets.NUGET_API_KEY}}
