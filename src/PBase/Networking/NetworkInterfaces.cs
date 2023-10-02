@@ -15,6 +15,7 @@ namespace PBase.Networking
         object UserToken { get; set; }
         EndPoint RemoteEndPoint { get; set; }
         event EventHandler<SocketAsyncEventArgs> Completed;
+        ISocket AcceptSocket {  get; set; }
     }
 
     public interface ISocket : IDisposable
@@ -23,6 +24,12 @@ namespace PBase.Networking
         bool ReceiveAsync(ISocketAsyncEventArgs args);
         bool SendAsync(ISocketAsyncEventArgs args);
         void Disconnect(bool reuseSocket);
+        void Bind(NetAddress local);
+        void Listen();
+        void Listen(int backlog);
+        bool AcceptAsync(ISocketAsyncEventArgs args);
+
+
     }
 
     public interface ISocketAsyncEventArgsFactory

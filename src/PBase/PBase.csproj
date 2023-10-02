@@ -9,15 +9,15 @@
     <Company>Primal Works</Company>
     <Product>PrimitiveBase</Product>
     <Description>General set of base classes implementing primitive concepts and useful utilities that are required for all but the basic of libraries and applications.</Description>
-    <Copyright>Copyright  © 2018-2020 Primal Works</Copyright>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/ekwus/PrimitiveBase/master/LICENSE.md</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/ekwus/PrimitiveBase</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/ekwus/PrimitiveBase</RepositoryUrl>
+    <Copyright>Copyright  © 2018-2023 Primal Works</Copyright>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/PrimalWorks/PrimitiveBase/master/LICENSE.md</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/PrimalWorks/PrimitiveBase</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/PrimalWorks/PrimitiveBase</RepositoryUrl>
     <PackageReleaseNotes>Early version of this base class library</PackageReleaseNotes>
-    <PackageVersion>0.4.0</PackageVersion>
-    <AssemblyVersion>0.4.0</AssemblyVersion>
-    <InformationalVersion>0.4.0</InformationalVersion>
-    <FileVersion>0.4.0</FileVersion>
+    <PackageVersion>0.5.0</PackageVersion>
+    <AssemblyVersion>0.5.0</AssemblyVersion>
+    <InformationalVersion>0.5.0</InformationalVersion>
+    <FileVersion>0.5.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
