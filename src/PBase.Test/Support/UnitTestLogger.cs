@@ -40,9 +40,9 @@ namespace PBase.Test.Support
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            _testOutputHelper.WriteLine($"{_categoryName} {logLevel} [{eventId}] {formatter(state, exception)}");
+            _testOutputHelper?.WriteLine($"{_categoryName} {logLevel} [{eventId}] {formatter(state, exception)}");
             if (exception != null)
-                _testOutputHelper.WriteLine(exception.ToString());
+                _testOutputHelper?.WriteLine(exception.ToString());
         }
 
         private class NoopDisposable : IDisposable
