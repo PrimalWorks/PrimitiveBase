@@ -13,8 +13,9 @@ jobs:
   build:
     env:
       BUILD_CONFIG: "Release"
+      NUGET_API_KEY: ${{secrets.NUGET_API_KEY}}
 
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
@@ -27,6 +28,6 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
       - name: Test
-        run: dotnet test /p:CollectCoverage=true /p:Configuration=$BUILD_CONFIG /p:Include=[PBase]* /p:CoverletOutputFormat=opencover /p:CoverletOutput=../../ --no-build
+        run: dotnet test /p:CollectCoverage=true /p:Include=[PBase]* /p:CoverletOutputFormat=opencover /p:CoverletOutput=../../ --no-build
       - name: Publish
-        run: nuget push **\*.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{secrets.NUGET_API_KEY}}
+        run: nuget push **\*.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey $NUGET_API_KEY
