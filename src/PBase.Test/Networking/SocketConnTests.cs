@@ -9,6 +9,7 @@ using System.Net;
 using Xunit;
 using System.Threading.Tasks;
 using System.Threading;
+using PBase.Logging;
 
 namespace PBase.Test.Networking
 {
@@ -21,14 +22,14 @@ namespace PBase.Test.Networking
 
         // Removing this test for now as it access the internet
         [Fact]
-        public void TestGETRequest()
+        public async void TestGETRequest()
         {
             int received = 0;
             var factory = new PSocketArgsFactory(8384, 512);
 
             using (var cli = new SocketConn(new PSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), factory))
             {
-                var connect = cli.Connect(
+                var connect = await cli.Connect(
                    //new NetAddress("178.62.88.250", 80),
                    new NetAddress("54.161.141.91", 80),
                    (a) =>
@@ -40,32 +41,24 @@ namespace PBase.Test.Networking
                        return true;
                    }
                 );
-                connect.ContinueWith((res) =>
-                {
-                    Assert.True(res.Result);
-                    Task.Run(() =>
-                    {
 
-                        var sb = new StringBuilder();
-                        sb.Append("GET /anything HTTP/1.1\r\n");
-                        sb.Append("Host: ionot.com\r\n");
-                        sb.Append("Connection: keep-alive\r\n");
-                        sb.Append("Cache-Control: no-cache\r\n");
-                        sb.Append("User-Agent: PrimitiveBase\r\n");
-                        sb.Append("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\r\n");
-                        sb.Append("Accept-Encoding: gzip, deflate\r\n");
-                        sb.Append("Accept-Language: en-GB,en;q=0.9,en-US;q=0.8\r\n");
-                        sb.Append("\r\n");
+                Assert.True(connect);
 
-                        var bytes = ASCIIEncoding.ASCII.GetBytes(sb.ToString());
+                var sb = new StringBuilder();
+                sb.Append("GET /anything HTTP/1.1\r\n");
+                sb.Append("Host: ionot.com\r\n");
+                sb.Append("Connection: keep-alive\r\n");
+                sb.Append("Cache-Control: no-cache\r\n");
+                sb.Append("User-Agent: PrimitiveBase\r\n");
+                sb.Append("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\r\n");
+                sb.Append("Accept-Encoding: gzip, deflate\r\n");
+                sb.Append("Accept-Language: en-GB,en;q=0.9,en-US;q=0.8\r\n");
+                sb.Append("\r\n");
 
-                        var send = cli.SendBuffer(bytes);
-                        send.ContinueWith((res2) =>
-                        {
-                            Assert.True(res2.Result);
-                        });
-                    });
-                });
+                var bytes = ASCIIEncoding.ASCII.GetBytes(sb.ToString());
+
+                var send = await cli.SendBuffer(bytes);
+                Assert.True(send);
 
                 Thread.Sleep(3000);
 

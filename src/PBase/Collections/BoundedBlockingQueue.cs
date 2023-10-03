@@ -391,7 +391,7 @@ namespace PBase.Collections
         public IEnumerator<T> GetEnumerator()
         {
             //Using Values Enumerator
-            return (IEnumerator<T>)Values.GetEnumerator();
+            return Values.Cast<T>().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
