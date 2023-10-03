@@ -28,6 +28,7 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
       - name: Test
-        run: dotnet test /p:CollectCoverage=true /p:Include=[PBase]* /p:CoverletOutputFormat=opencover /p:CoverletOutput=../../
+        run: dotnet test
+        #run: dotnet test /p:CollectCoverage=true /p:Include=[PBase]* /p:CoverletOutputFormat=opencover /p:CoverletOutput=../../
       - name: Publish
         run: nuget push **\*.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey $NUGET_API_KEY
